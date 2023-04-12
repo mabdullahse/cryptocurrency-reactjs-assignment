@@ -36,6 +36,8 @@ function CryptocurrencyWrapper() {
   }) as Props;
 
   const [isSpinning, setIsSpinning] = useState(false);
+  const [updatedURLInfo, setupdatedURL] = useState('');
+
   useEffect(() => {
     setIsSpinning(!isLoaded);
   }, [isLoaded]);
@@ -57,6 +59,7 @@ function CryptocurrencyWrapper() {
       default:
         updatedURL = '/crypto-cny.json';
     }
+    setupdatedURL(updatedURL)
     refresh(updatedURL);
   }, [currency]);
 
@@ -77,7 +80,7 @@ function CryptocurrencyWrapper() {
         </h1>
 
         <div className='cursor-pointer'>
-          <RefreshIcon refresh={() => refresh()} isSpinning={isSpinning} />
+          <RefreshIcon refresh={() => refresh(updatedURLInfo)} isSpinning={isSpinning} />
         </div>
       </div>
 
