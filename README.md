@@ -15,8 +15,8 @@ ReactJS application for Food App (styled-components + react-spring + @react-goog
 ### Mockups
 
 <div>
-<img src="./public/list.png" alt="Mockup 1" width="100" height="200" style="display:inline-block;"/>
-<img src="./public/detail.png" alt="Mockup 2" width="100" height="200" style="display:inline-block;"/>  
+<img src="./public/list.png" alt="Mockup 1" width="500" height="500" style="display:inline-block;"/>
+<img src="./public/detail.png" alt="Mockup 2" width="500" height="500" style="display:inline-block;"/>  
 
 </div>
 
