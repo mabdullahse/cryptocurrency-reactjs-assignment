@@ -1,169 +1,202 @@
-import { useEffect, useState } from 'react';
-import useApiRequest from '../hooks/RequestApi';
+import React from 'react';
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  Row,
+  SortingState,
+  useReactTable,
+} from '@tanstack/react-table';
+import { useVirtual } from 'react-virtual';
 import { NumericFormat } from 'react-number-format';
 
-
 interface ICrypto {
-  id: number,
-  name: string,
-  symbol: string,
-  cmc_rank: string,
+  id: number;
+  name: string;
+  symbol: string;
+  cmc_rank: string;
   quote: {
-    USD: {
-      price: number,
-      volume_24h: number
-    }
-  }
+    [key: string]: {
+      price: number;
+      volume_24h: number;
+    };
+  };
 }
-interface Props {
-  data: ICrypto[];
-  error: any;
-  isLoaded: boolean;
-  refresh: () => void;
+interface TableProps {
+  data: ICrypto[]; // Update the type to expect an array of ICrypto[]
+  currencyPrefix: string;
+  currencySymbol: string;
+  onCryptoSelection: (id: number) => void;
 }
 
-function Cryptocurrency() {
-  const {  data, error, isLoaded, refresh }   = useApiRequest({
-    url: '/crypto.json',
-    option: 'GET',
-    include_crypto_api: true,
-  })   as Props 
+const Cryptocurrency: React.FC<TableProps> = ({
+  data,
+  currencySymbol,
+  currencyPrefix,
+  onCryptoSelection,
+}) => {
+  const [sorting, setSorting] = React.useState<SortingState>([]);
 
- 
-  
-  const [isSpinning, setIsSpinning] = useState(false);
+  const columns = React.useMemo<ColumnDef<ICrypto>[]>(
+    () => [
+      {
+        accessorKey: 'name',
+        cell: (info) => info.getValue(),
+        header: () => <span>Name</span>,
+        size: 65,
+      },
+      {
+        accessorFn: (row) => row.cmc_rank,
+        id: 'cmc_rank',
+        cell: (info) => info.getValue(),
+        header: () => <span>Rank</span>,
+        size: 50,
+      },
+      {
+        accessorFn: (row) => row.symbol,
+        id: 'symbol',
+        cell: (info) => info.getValue(),
+        header: () => <span>Symbol</span>,
+        size: 75,
+      },
 
-  useEffect(() => {
-    setIsSpinning(!isLoaded);
-  }, [isLoaded]);
+      {
+        accessorFn: (row) => row.quote[currencySymbol].price,
+        id: 'quote',
+        cell: (info) => {
+          const price = info.getValue() as number;
+          return (
+            <NumericFormat
+              value={price}
+              displayType={'text'}
+              thousandSeparator={true}
+              prefix={currencyPrefix}
+              decimalScale={2}
+            />
+          );
+        },
+        header: () => <span>Price</span>,
+      },
+      {
+        accessorFn: (row) => row.quote[currencySymbol].volume_24h,
+        id: 'slug',
+        cell: (info) => {
+          const price = info.getValue() as number;
+          return (
+            <NumericFormat
+              value={price}
+              displayType={'text'}
+              thousandSeparator={true}
+              prefix={currencyPrefix}
+              decimalScale={2}
+            />
+          );
+        },
+        header: () => <span> 24 hour Change</span>,
+      },
+    ],
+    []
+  );
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    debugTable: true,
+  });
+
+  const tableContainerRef = React.useRef<HTMLDivElement>(null);
+
+  const { rows } = table.getRowModel();
+  const rowVirtualizer = useVirtual({
+    parentRef: tableContainerRef,
+    size: rows.length,
+    overscan: 10,
+  });
+  const { virtualItems: virtualRows, totalSize } = rowVirtualizer;
+
+  const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0;
+  const paddingBottom =
+    virtualRows.length > 0
+      ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0)
+      : 0;
 
   return (
-    <div>
-      <div className='flex justify-between items-center'>
-        <h1 className='inline-block text-xl sm:text-3xl font-bold md:font-extrabold text-slate-900 my-5 '>
-          Cryptocurrency List  
-        </h1>
-
-        <div className='cursor-pointer'>
-          <svg
-            onClick={refresh}
-            xmlns='http://www.w3.org/2000/svg'
-            fill='none'
-            viewBox='0 0 24 24'
-            strokeWidth='1.5'
-            stroke='currentColor'
-            className={`w-6 h-6 ${isSpinning ? 'icn-spinner' : ''}`}
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              d='M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99'
-            />
-          </svg>
-        </div>
-      </div>
-
-      <div className='relative overflow-x-auto shadow-sm sm:rounded-lg'>
-        <table className='w-full text-sm text-left text-gray-500  '>
-          <thead className='text-xs text-gray-700 uppercase bg-gray-50    '>
-            <tr>
-              <th scope='col' className='px-6 py-3'>
-                Name
-              </th>
-              <th scope='col' className='px-6 py-3'>
-                Rank
-              </th>
-              <th scope='col' className='px-6 py-3'>
-                Symbol
-              </th>
-              <th scope='col' className='px-6 py-3'>
-                Price
-              </th>
-              <th scope='col' className='px-6 py-3'>
-                24 hour Change
-              </th>
-            </tr>
+    <div className='p-2'>
+      <div className='h-2' />
+      <div ref={tableContainerRef} className='cryptotable-cotainer'>
+        <table>
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <th
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      style={{ width: header.getSize() }}
+                    >
+                      {header.isPlaceholder ? null : (
+                        <div
+                          {...{
+                            className: header.column.getCanSort()
+                              ? 'cursor-pointer select-none'
+                              : '',
+                            onClick: header.column.getToggleSortingHandler(),
+                          }}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                        </div>
+                      )}
+                    </th>
+                  );
+                })}
+              </tr>
+            ))}
           </thead>
           <tbody>
-            {isSpinning &&
-              Array.from({ length: 5 }).map((_, index) => (
-                <tr key={index} className='h-12 bg-white border-b hover:bg-gray-50 cursor-pointer loading-shimmer'>
-                  <th
-                    scope='row'
-                    className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap  '
-                  ></th>
-                  <td className='px-6 py-4'> </td>
-                  <td className='px-6 py-4'> </td>
-                  <td className='px-6 py-4'></td>
-                  <td className='px-6 py-4'></td>
-                </tr>
-              ))}
-          {!isSpinning &&
-              data.map((item, index) => (
-                <tr className='bg-white border-b hover:bg-gray-50 cursor-pointer'>
-                <th
-                  scope='row'
-                  className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap  '
-                >
-                  {item.name}
-                </th>
-                <td className='px-6 py-4'> {item.cmc_rank}</td>
-                <td className='px-6 py-4'>{item.symbol}</td>
-                <td className='px-6 py-4'>
-                  <NumericFormat
-                    value={item.quote.USD.price}
-                    displayType={'text'}
-                    thousandSeparator={true}
-                    prefix={'$'}
-                    decimalScale={2}
-                  />
-                </td>
-                <td className='px-6 py-4'>
-                  {' '}
-                  <NumericFormat
-                    value={item.quote.USD.volume_24h}
-                    displayType={'text'}
-                    decimalScale={2}
-                    thousandSeparator={true}
-                    prefix={'$'}
-                  />
-                </td>
+            {paddingTop > 0 && (
+              <tr>
+                <td style={{ height: `${paddingTop}px` }} />
               </tr>
-              ))}
+            )}
+            {virtualRows.map((virtualRow) => {
+              const row = rows[virtualRow.index] as Row<ICrypto>;
 
-            {/* <tr className='bg-white border-b hover:bg-gray-50 cursor-pointer'>
-              <th
-                scope='row'
-                className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap  '
-              >
-                Bitcoin
-              </th>
-              <td className='px-6 py-4'>1</td>
-              <td className='px-6 py-4'>BTC</td>
-              <td className='px-6 py-4'>
-                <NumericFormat
-                  value={2456981}
-                  displayType={'text'}
-                  thousandSeparator={true}
-                  prefix={'$'}
-                />
-              </td>
-              <td className='px-6 py-4'>
-                {' '}
-                <NumericFormat
-                  value={19882345383.658875}
-                  displayType={'text'}
-                  decimalScale={2}
-                  thousandSeparator={true}
-                  prefix={'$'}
-                />
-              </td>
-            </tr> */}
+              return (
+                <tr key={row.id} onClick={() => onCryptoSelection(+row.id)} className='cursor-pointer'>
+                  {row.getVisibleCells().map((cell) => {
+                    return (
+                      <td key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+            {paddingBottom > 0 && (
+              <tr>
+                <td style={{ height: `${paddingBottom}px` }} />
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
     </div>
   );
-}
+};
 
 export default Cryptocurrency;

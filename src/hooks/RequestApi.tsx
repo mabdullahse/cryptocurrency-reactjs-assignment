@@ -6,13 +6,13 @@ interface IuseApiRequest {
   include_crypto_api?: boolean;
 }
 function useApiRequest({ url, option, include_crypto_api }: IuseApiRequest) {
-  console.log('useApiRequest');
+ 
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<any>([] || {});
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchData = () => {
+  const fetchData = (updatedURL="") => {
     const options = {
       method: option,
       headers: new Headers({
@@ -23,7 +23,7 @@ function useApiRequest({ url, option, include_crypto_api }: IuseApiRequest) {
       }),
     };
 
-    fetch(url, options)
+    fetch(updatedURL ? updatedURL : url, options)
       .then((response) => {
         if (!response.ok) {
           throw new Error(
@@ -33,7 +33,8 @@ function useApiRequest({ url, option, include_crypto_api }: IuseApiRequest) {
         return response.json();
       })
       .then((response) => {
-        setIsLoaded(true);
+        setIsLoaded(true); 
+        
         setData(response.data);
       })
       .catch((err) => {
@@ -45,11 +46,11 @@ function useApiRequest({ url, option, include_crypto_api }: IuseApiRequest) {
     fetchData();
   }, [url]);
 
-  const refresh = () => {
+  const refresh = (updatedURL: string) => {
     setIsLoaded(false);
     setTimeout(() => {
-      fetchData();
-    }, 3000); //
+      fetchData(updatedURL);
+    }, 3000); 
   };
 
   return { error, isLoaded, data, refresh };

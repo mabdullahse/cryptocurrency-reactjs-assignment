@@ -39,3 +39,42 @@
         background-position: 1000px 0;
     }
 }
+
+ 
+
+
+ 
+  
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-family: arial, sans-serif;
+    table-layout: fixed;
+    width: 100%;
+    
+  }
+  
+  thead {
+    background: lightgray;
+    margin: 0;
+    position: sticky;
+    top: 0;
+  }
+  
+  th {
+    
+    padding: 6px 4px;
+    text-align: left;
+  }
+  
+  td {
+    padding: 6px;
+  }
+  
+  .cryptotable-cotainer { 
+    height: 70vh;
+    max-width: 90vw !important;
+    min-width: 600px !important;
+    overflow: auto;
+  }
+  

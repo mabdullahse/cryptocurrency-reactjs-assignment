@@ -1,13 +1,15 @@
 import { useState } from 'react' 
-import { Routes , Route} from 'react-router-dom'
+import { Routes , Route, useLocation, Navigate} from 'react-router-dom'
 import Cryptocurrency from './pages/Cryptocurrency'
 import Nav from './components/Nav'
 import { Outlet } from "react-router-dom";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const {pathname} = useLocation()
  
-
+ if(pathname === "/"){
+  return <Navigate to="/crypto"   replace />;
+ }
  
   return (
     <div >
