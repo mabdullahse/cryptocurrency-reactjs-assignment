@@ -36,25 +36,13 @@ interface Props {
 const CryptocurrencyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
-  const { currency, togglCurrency } = useCurrencyContext();
+  const { currency } = useCurrencyContext();
 
   const { data, error, isLoaded, refresh } = useApiRequest({
     url: '/cryptoinfo.json',
     option: 'GET',
     include_crypto_api: true,
   }) as Props;
-
-  const [isSpinning, setIsSpinning] = useState(true);
-  useEffect(() => {
-    setIsSpinning(!isLoaded);
-  }, [isLoaded]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    refresh();
-  }, [currency]);
 
   return (
     <div>
@@ -70,7 +58,7 @@ const CryptocurrencyDetail: React.FC = () => {
           <div onClick={() => navigate('/crypto/')}>
             <BackIcon />
           </div>
-          <RefreshIcon refresh={() => refresh()} isSpinning={isSpinning} />
+          <RefreshIcon refresh={() => refresh()} isSpinning={!isLoaded} />
         </div>
       </div>
 
@@ -101,7 +89,7 @@ const CryptocurrencyDetail: React.FC = () => {
           totalSupply={data.total_supply}
           availableSupply={data.circulating_supply}
           priceInBitcoin={data.quote?.USD?.price}
-          isSpinning={isSpinning}
+          isSpinning={!isLoaded}
         />
       </div>
     </div>

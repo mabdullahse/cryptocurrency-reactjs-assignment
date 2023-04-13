@@ -13,6 +13,7 @@ function useApiRequest({ url, option, include_crypto_api }: IuseApiRequest) {
   const [error, setError] = useState(null);
 
   const fetchData = (updatedURL="") => {
+    setIsLoaded(false);
     const options = {
       method: option,
       headers: new Headers({
@@ -47,10 +48,11 @@ function useApiRequest({ url, option, include_crypto_api }: IuseApiRequest) {
   }, [url]);
 
   const refresh = (updatedURL: string) => {
+    
     setIsLoaded(false);
     setTimeout(() => {
       fetchData(updatedURL);
-    }, 3000); 
+    }, 2000); 
   };
 
   return { error, isLoaded, data, refresh };

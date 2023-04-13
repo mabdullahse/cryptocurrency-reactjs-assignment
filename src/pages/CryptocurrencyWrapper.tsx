@@ -1,5 +1,5 @@
-import React, {  useEffect, useState } from 'react';
-import useApiRequest from '../hooks/RequestApi'; 
+import React  from 'react';
+import useApiRequest from '../hooks/RequestApi';
 
 import { useNavigate } from 'react-router-dom';
 import RefreshIcon from '../assets/icons/RefreshIcon';
@@ -25,43 +25,27 @@ interface Props {
   refresh: (updatedURL?: string) => void;
 }
 
+function getURL(currency: string) {
+  return currency === 'USD'
+    ? '/crypto-usd.json'
+    : currency === 'EUR'
+    ? '/crypto-eur.json'
+    : '/crypto-cny.json';
+}
+
 function CryptocurrencyWrapper() {
   const navigate = useNavigate();
-  const { currency, togglCurrency } = useCurrencyContext();
+  const { currency } = useCurrencyContext();
 
   const { data, error, isLoaded, refresh } = useApiRequest({
-    url: '/crypto-usd.json',
+    url: getURL(currency),
     option: 'GET',
     include_crypto_api: true,
   }) as Props;
 
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [updatedURLInfo, setupdatedURL] = useState('');
-
-  useEffect(() => {
-    setIsSpinning(!isLoaded);
-  }, [isLoaded]);
-
   const onCryptoSelection = (id: number) => {
     navigate('/crypto/' + id);
   };
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    let updatedURL;
-    switch (currency) {
-      case 'USD':
-        updatedURL = '/crypto-usd.json';
-        break;
-      case 'EUR':
-        updatedURL = '/crypto-eur.json';
-        break;
-      default:
-        updatedURL = '/crypto-cny.json';
-    }
-    setupdatedURL(updatedURL)
-    refresh(updatedURL);
-  }, [currency]);
 
   const currencySymbol =
     data && data[0]?.quote['USD']
@@ -76,18 +60,21 @@ function CryptocurrencyWrapper() {
     <div>
       <div className='flex justify-between items-center'>
         <h1 className='inline-block text-xl sm:text-3xl font-bold md:font-extrabold text-slate-900 my-5 '>
-          Cryptocurrency List
+          Cryptocurrency List 
         </h1>
 
         <div className='cursor-pointer'>
-          <RefreshIcon refresh={() => refresh(updatedURLInfo)} isSpinning={isSpinning} />
+          <RefreshIcon
+            refresh={() => refresh(getURL(currency))}
+            isSpinning={!isLoaded}
+          />
         </div>
       </div>
 
-      {isSpinning && <div className='h-96   loading-shimmer'></div>}
+      {!isLoaded && <div className='h-96   loading-shimmer'></div>}
 
       <div className={`overflow mx-auto shadow-sm sm:rounded-lg`}>
-        {!isSpinning && (
+        {isLoaded && (
           <Cryptocurrency
             data={data}
             currencyPrefix={currencyPrefix}
