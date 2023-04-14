@@ -1,4 +1,4 @@
-import { useEffect, useState, FC } from 'react';
+import { useEffect, useState, FC, useRef } from 'react';
 
 interface IuseApiRequest {
   url: string;
@@ -6,14 +6,19 @@ interface IuseApiRequest {
   include_crypto_api?: boolean;
 }
 function useApiRequest({ url, option, include_crypto_api }: IuseApiRequest) {
- 
-
   const [data, setData] = useState<any>([] || {});
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const fetchData = (updatedURL="") => {
+  const fetchData = (updatedURL = '') => {
     setIsLoaded(false);
+
+    // Create a new AbortController instance
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    const signal = abortController.signal;
+
     const options = {
       method: option,
       headers: new Headers({
@@ -22,6 +27,7 @@ function useApiRequest({ url, option, include_crypto_api }: IuseApiRequest) {
           'X-CMC_PRO_API_KEY': import.meta.env.VITE_REACT_APP_KEY,
         }),
       }),
+      signal,
     };
 
     fetch(updatedURL ? updatedURL : url, options)
@@ -34,8 +40,8 @@ function useApiRequest({ url, option, include_crypto_api }: IuseApiRequest) {
         return response.json();
       })
       .then((response) => {
-        setIsLoaded(true); 
-        
+        setIsLoaded(true);
+
         setData(response.data);
       })
       .catch((err) => {
@@ -45,14 +51,19 @@ function useApiRequest({ url, option, include_crypto_api }: IuseApiRequest) {
 
   useEffect(() => {
     fetchData();
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [url]);
 
   const refresh = (updatedURL: string) => {
-    
     setIsLoaded(false);
     setTimeout(() => {
       fetchData(updatedURL);
-    }, 2000); 
+    }, 2000);
   };
 
   return { error, isLoaded, data, refresh };

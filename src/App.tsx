@@ -1,6 +1,6 @@
 import { useState } from 'react' 
 import { Routes , Route, useLocation, Navigate} from 'react-router-dom'
-import Cryptocurrency from './pages/Cryptocurrency'
+import Cryptocurrency from './pages/CryptocurrencyTable'
 import Nav from './components/Nav'
 import { Outlet } from "react-router-dom";
 

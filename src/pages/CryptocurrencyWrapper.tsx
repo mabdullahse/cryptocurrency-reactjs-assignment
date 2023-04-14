@@ -4,7 +4,7 @@ import useApiRequest from '../hooks/RequestApi';
 import { useNavigate } from 'react-router-dom';
 import RefreshIcon from '../assets/icons/RefreshIcon';
 import { useCurrencyContext } from '../store/CurrencyContext';
-import Cryptocurrency from './Cryptocurrency';
+import Cryptocurrency from './CryptocurrencyTable';
 
 interface ICrypto {
   id: number;
